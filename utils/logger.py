@@ -15,6 +15,12 @@ from rich.console import Console
 # Shared Rich console (reused by the dashboard as well)
 console = Console()
 
+import os
+from pathlib import Path
+
+LOGS_DIR = Path("logs")
+AGENTS_LOG_DIR = LOGS_DIR / "agents"
+
 # ---------------------------------------------------------------------------
 # Category tags used in log messages
 # ---------------------------------------------------------------------------
@@ -29,6 +35,8 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     Call once at application startup.
     """
+    os.makedirs(AGENTS_LOG_DIR, exist_ok=True)
+    
     file_handler = logging.FileHandler("error.log", encoding="utf-8")
     file_handler.setLevel(logging.WARNING)
     file_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
@@ -59,3 +67,28 @@ def get_logger(name: str) -> logging.Logger:
         log.info(f"{AGENT} Agent-01 chose to SPEAK")
     """
     return logging.getLogger(name)
+
+def get_agent_logger(agent_name: str) -> logging.Logger:
+    """Return a dedicated file logger for an individual agent."""
+    logger_name = f"agent_file.{agent_name}"
+    logger = logging.getLogger(logger_name)
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        fh = logging.FileHandler(AGENTS_LOG_DIR / f"{agent_name}.log", encoding="utf-8")
+        fmt = logging.Formatter('[%(asctime)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
+        logger.propagate = False
+    return logger
+
+def get_society_logger() -> logging.Logger:
+    """Return a dedicated file logger for society governance events."""
+    logger = logging.getLogger("society_file")
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        fh = logging.FileHandler(LOGS_DIR / "society.log", encoding="utf-8")
+        fmt = logging.Formatter('[%(asctime)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
+        logger.propagate = False
+    return logger

@@ -260,6 +260,15 @@ class SimulationEngine:
             # 5. Learn
             agent.learn(action, reward, self.step)
 
+            # Log to dedicated agent file
+            from utils.logger import get_agent_logger
+            agent_log = get_agent_logger(agent.personality.name)
+            agent_log.info(f"Step {self.step} | Action: {action.type.value}")
+            agent_log.info(f"  Content: {action.content}")
+            agent_log.info(f"  Target: {action.target_agent} | Reasoning: {action.reasoning}")
+            agent_log.info(f"  Outcome: {result.description} | Reward: {reward:.2f}")
+            agent_log.info("-" * 40)
+
             # Track for dashboard
             self._recent_actions.append(
                 f"[{agent.personality.name}] {action.type.value}: "

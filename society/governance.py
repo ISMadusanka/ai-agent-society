@@ -14,7 +14,7 @@ import uuid
 from dataclasses import dataclass, asdict, field
 from typing import Optional
 
-from utils.logger import SOCIETY
+from utils.logger import SOCIETY, get_society_logger
 
 log = logging.getLogger(__name__)
 
@@ -95,6 +95,7 @@ class SocietyState:
             )
         )
         log.info(f"{SOCIETY} 👑 {agent_id} → role: {role}")
+        get_society_logger().info(f"Step {step} | Role Assigned | {agent_id} is now '{role}' (was '{old}')")
 
     def get_role(self, agent_id: str) -> str:
         return self.roles.get(agent_id, "citizen")
@@ -133,6 +134,7 @@ class SocietyState:
             )
         )
         log.info(f"{SOCIETY} 📋 {agent_id} proposes: {content[:80]}")
+        get_society_logger().info(f"Step {step} | Proposal Created ({proposal_type}) | Proposer: {agent_id} | Content: {content}")
         return proposal
 
     def vote(
@@ -199,6 +201,7 @@ class SocietyState:
                 f"{proposal.content[:60]} "
                 f"({proposal.votes_for}–{proposal.votes_against})"
             )
+            get_society_logger().info(f"Step {step} | Proposal Resolved | ID: {proposal.id} | Status: {proposal.status.upper()} | Votes: {proposal.votes_for} Yes, {proposal.votes_against} No")
 
             # Apply accepted proposals
             if accepted:
