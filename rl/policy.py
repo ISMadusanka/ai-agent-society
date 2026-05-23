@@ -141,22 +141,29 @@ class LLMPolicy:
             result = self.llm.call_json(
                 prompt, system=_POLICY_SYSTEM, temperature=temp
             )
+            
+            # Ensure result is a dictionary
+            if not isinstance(result, dict):
+                result = {"raw": str(result)}
+
             # Validate required fields
-            if "action" not in result:
+            if "action" not in result or not isinstance(result["action"], str):
                 result["action"] = "observe"
-            if "content" not in result:
+            if "content" not in result or not isinstance(result["content"], str):
                 result["content"] = ""
             result.setdefault("target_agent", None)
             result.setdefault("reasoning", "")
 
+            # Log safely
+            content_str = str(result.get('content', ''))
             log.info(
                 f"{AGENT} 🎯 {agent.personality.name} decides: "
-                f"{result['action']} → {result.get('content', '')[:60]}"
+                f"{result['action']} → {content_str[:60]}"
             )
             return result
 
         except Exception as exc:
-            log.warning(
+            log.exception(
                 f"{AGENT} Policy failed for {agent.personality.name}: {exc}. "
                 f"Falling back to observe."
             )

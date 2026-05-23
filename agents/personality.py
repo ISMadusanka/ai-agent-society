@@ -119,19 +119,34 @@ def generate_personality(
 
     try:
         result = llm_client.call_json(prompt, system=_PERSONALITY_SYSTEM)
+        
+        if not isinstance(result, dict):
+            result = {"raw": str(result)}
+
+        name = result.get("name")
+        if not name or not isinstance(name, str):
+            name = f"Agent-{agent_id}"
+            
+        bg = result.get("background")
+        if not bg or not isinstance(bg, str):
+            bg = "A newcomer to the society."
+            
+        style = result.get("speaking_style")
+        if not style or not isinstance(style, str):
+            style = "neutral"
 
         profile = PersonalityProfile(
-            name=result.get("name", f"Agent-{agent_id}"),
+            name=name,
             traits=result.get("traits", PersonalityProfile().traits),
             values=result.get("values", ["fairness"]),
-            background=result.get("background", "A newcomer to the society."),
-            speaking_style=result.get("speaking_style", "neutral"),
+            background=bg,
+            speaking_style=style,
         )
         log.info(f"{AGENT} Generated personality: {profile.name}")
         return profile
 
     except Exception as exc:
-        log.warning(
+        log.exception(
             f"{AGENT} Personality generation failed for {agent_id}: {exc}. "
             f"Using fallback."
         )

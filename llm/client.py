@@ -109,14 +109,13 @@ class OllamaClient:
         system: Optional[str],
         temperature: Optional[float],
     ) -> dict:
+        full_prompt = f"{system}\n\n{prompt}" if system else prompt
         payload: dict = {
             "model": self.model,
-            "prompt": prompt,
+            "prompt": full_prompt,
             "stream": False,
             "options": {"temperature": temperature or self.temperature},
         }
-        if system:
-            payload["system"] = system
         return payload
 
     def _post(self, payload: dict) -> dict:

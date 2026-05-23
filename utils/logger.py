@@ -29,6 +29,11 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     Call once at application startup.
     """
+    file_handler = logging.FileHandler("error.log", encoding="utf-8")
+    file_handler.setLevel(logging.WARNING)
+    file_formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+    file_handler.setFormatter(file_formatter)
+
     logging.basicConfig(
         level=level,
         format="%(message)s",
@@ -39,7 +44,8 @@ def setup_logging(level: int = logging.INFO) -> None:
                 rich_tracebacks=True,
                 markup=True,
                 show_path=False,
-            )
+            ),
+            file_handler
         ],
     )
 
