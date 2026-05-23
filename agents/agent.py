@@ -41,6 +41,7 @@ class ActionType(Enum):
     REFLECT = "reflect"
     OBSERVE = "observe"
     CHALLENGE = "challenge"
+    UPDATE_PROFILE = "update_profile"
 
 
 @dataclass
@@ -102,6 +103,7 @@ class Agent:
         self.energy: float = 1.0
         self.mood: str = "neutral"
         self.goals: list[str] = []
+        self.self_profile: str = ""
 
         # Per-step accumulators
         self._pending_messages: list[Message] = []
@@ -271,6 +273,7 @@ class Agent:
             ActionType.REFLECT: 0.04,
             ActionType.OBSERVE: 0.01,
             ActionType.CHALLENGE: 0.10,
+            ActionType.UPDATE_PROFILE: 0.05,
         }
         self.energy = max(0.0, self.energy - costs.get(action.type, 0.05))
 
@@ -309,6 +312,7 @@ class Agent:
             "energy": self.energy,
             "mood": self.mood,
             "goals": self.goals,
+            "self_profile": self.self_profile,
         }
 
     def load_state_dict(self, data: dict) -> None:
@@ -318,6 +322,7 @@ class Agent:
         self.energy = data.get("energy", 1.0)
         self.mood = data.get("mood", "neutral")
         self.goals = data.get("goals", [])
+        self.self_profile = data.get("self_profile", "")
 
     def __repr__(self) -> str:
         return (

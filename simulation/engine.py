@@ -139,6 +139,17 @@ class SimulationEngine:
                 f"[green]→ {agent.personality.name}[/green]"
             )
 
+            # Log the generated personality profile
+            from utils.logger import get_agent_logger
+            agent_log = get_agent_logger(agent.personality.name)
+            agent_log.info("=" * 60)
+            agent_log.info(f"AGENT BORN: {agent.personality.name} ({agent.agent_id})")
+            agent_log.info(f"Traits: {agent.personality.traits}")
+            agent_log.info(f"Values: {agent.personality.values}")
+            agent_log.info(f"Background: {agent.personality.background}")
+            agent_log.info(f"Speaking Style: {agent.personality.speaking_style}")
+            agent_log.info("=" * 60)
+
             self.agents.append(agent)
 
         self.console.print(
@@ -290,6 +301,7 @@ class SimulationEngine:
             ActionType.VOTE: self._handle_vote,
             ActionType.FORM_ALLIANCE: self._handle_alliance,
             ActionType.REFLECT: self._handle_reflect,
+            ActionType.UPDATE_PROFILE: self._handle_update_profile,
             ActionType.OBSERVE: self._handle_observe,
             ActionType.CHALLENGE: self._handle_challenge,
         }
@@ -457,6 +469,18 @@ class SimulationEngine:
         return ActionResult(
             success=True,
             description=f"Reflected: {reflection[:60]}",
+        )
+
+    def _handle_update_profile(self, agent: Agent, action: Action) -> ActionResult:
+        agent.self_profile = action.content
+        agent.memory.add(
+            text=f"I updated my personal profile to:\n{action.content}",
+            memory_type="observation",
+            timestamp=self.step,
+        )
+        return ActionResult(
+            success=True,
+            description="Updated self-maintained profile",
         )
 
     def _handle_observe(self, agent: Agent, action: Action) -> ActionResult:
@@ -712,5 +736,14 @@ class SimulationEngine:
             agent.load_state_dict(agent_data)
             agent.memory.load()
             self.agents.append(agent)
+
+            # Log resumption
+            from utils.logger import get_agent_logger
+            agent_log = get_agent_logger(agent.personality.name)
+            agent_log.info("=" * 60)
+            agent_log.info(f"SIMULATION RESUMED (Step {self.step})")
+            if agent.self_profile:
+                agent_log.info(f"Current Self-Profile:\n{agent.self_profile}")
+            agent_log.info("=" * 60)
 
         return True

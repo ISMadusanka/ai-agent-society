@@ -47,6 +47,7 @@ Available action types:
   vote           - Vote on a pending proposal (content: proposal_id, target_agent: null)
   form_alliance  - Propose an alliance with another agent
   reflect        - Spend this turn reflecting on your experiences
+  update_profile - Rewrite your personal free-form profile (likes, enemies, notes, etc.). The content provided will completely replace your current profile.
   observe        - Quietly observe without acting
   challenge      - Challenge an existing rule or role"""
 
@@ -77,6 +78,9 @@ Role: {agent.current_role}
 Energy: {agent.energy:.1f}/1.0
 Mood: {agent.mood}
 Goals: {', '.join(agent.goals) if agent.goals else 'None set'}
+
+== YOUR SELF-MAINTAINED PROFILE ==
+{agent.self_profile or 'You have not written a profile yet. Use the update_profile action to write one.'}
 
 == YOUR RELEVANT MEMORIES ==
 {memory_text}
