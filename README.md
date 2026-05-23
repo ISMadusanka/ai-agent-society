@@ -60,18 +60,22 @@ ollama pull gpt-oss:20b
 
 ### Run
 
+**Fresh Start Command**
+Start a brand new society from scratch (this will create new personalities and a new database):
 ```bash
-# Default: 10 agents, 100 steps
-python main.py
+python main.py --agents 10 --steps 100
+```
 
-# Customize
-python main.py --agents 5 --steps 50
+**Continue Society Command**
+Resume a previously saved society exactly where it left off, keeping memories, roles, and relationships intact:
+```bash
+python main.py --resume --steps 50
+```
 
+**Advanced Usage**
+```bash
 # Use a different model
 python main.py --model "llama3:8b"
-
-# Resume a previous society
-python main.py --resume --steps 50
 
 # Debug logging
 python main.py --agents 3 --steps 10 --debug
