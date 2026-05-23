@@ -76,6 +76,7 @@ class OllamaClient:
         Returns the *parsed* JSON object (dict or list) rather than
         the raw Ollama wrapper.
         """
+        payload = self._build_payload(prompt, system, temperature)
         # Do not use payload["format"] = "json" as it causes empty responses
         # in some models (like gpt-oss:20b). We rely on prompt instructions instead.
         raw = self._post(payload)
