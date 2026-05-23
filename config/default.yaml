@@ -1,0 +1,26 @@
+# =============================================================================
+# AI Agent Society — Default Configuration
+# =============================================================================
+
+llm:
+  base_url: "http://localhost:11434"
+  model: "gpt-oss:20b"
+  timeout: 120
+  max_retries: 3
+  temperature: 0.8
+
+memory:
+  embed_model: "all-MiniLM-L6-v2"
+  embed_dim: 384
+  top_k: 5
+  reward_weight: 0.3
+  persist_dir: "data/memories"
+
+simulation:
+  num_agents: 10
+  max_steps: 100
+  step_delay: 0.5
+  reflection_interval: 5    # Agents reflect every N steps
+  persist_interval: 10      # Full state saved every N steps
+  persist_dir: "data/state"
+  max_concurrent_calls: 5
