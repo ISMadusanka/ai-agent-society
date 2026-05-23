@@ -76,14 +76,22 @@ class OllamaClient:
         Returns the *parsed* JSON object (dict or list) rather than
         the raw Ollama wrapper.
         """
-        payload = self._build_payload(prompt, system, temperature)
-        payload["format"] = "json"
+        # Do not use payload["format"] = "json" as it causes empty responses
+        # in some models (like gpt-oss:20b). We rely on prompt instructions instead.
         raw = self._post(payload)
+        text = raw.get("response", "").strip()
+        
+        # Extract JSON block if wrapped in markdown or surrounded by preamble
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1 and end >= start:
+            text = text[start:end+1]
+            
         try:
-            return json.loads(raw["response"])
+            return json.loads(text)
         except (json.JSONDecodeError, KeyError) as exc:
             log.warning(
-                f"{LLM} JSON parse failed, returning raw text. Error: {exc}"
+                f"{LLM} JSON parse failed. Raw text: {raw.get('response', '')[:100]!r}... Error: {exc}"
             )
             return {"raw": raw.get("response", "")}
 
