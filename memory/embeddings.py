@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+import torch
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
@@ -36,8 +37,9 @@ class EmbeddingClient:
     @property
     def model(self) -> SentenceTransformer:
         if self._model is None:
-            log.info(f"{LLM} Loading embedding model: {self.model_name}")
-            self._model = SentenceTransformer(self.model_name)
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            log.info(f"{LLM} Loading embedding model: {self.model_name} on {device}")
+            self._model = SentenceTransformer(self.model_name, device=device)
             log.info(
                 f"{LLM} Embedding model loaded "
                 f"(dim={self._model.get_sentence_embedding_dimension()})"

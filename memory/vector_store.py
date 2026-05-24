@@ -62,7 +62,17 @@ class VectorMemory:
         self.persist_dir.mkdir(parents=True, exist_ok=True)
 
         # Inner product on L2-normalised vectors == cosine similarity
-        self.index = faiss.IndexFlatIP(dim)
+        cpu_index = faiss.IndexFlatIP(dim)
+        
+        # Try to move index to GPU if available
+        try:
+            res = faiss.StandardGpuResources()
+            self.index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
+            log.debug(f"{AGENT} Initialised FAISS index on GPU for {agent_id}")
+        except Exception as e:
+            self.index = cpu_index
+            log.debug(f"{AGENT} Initialised FAISS index on CPU for {agent_id} (GPU not available: {e})")
+            
         self.entries: list[MemoryEntry] = []
 
     # ------------------------------------------------------------------
@@ -138,7 +148,14 @@ class VectorMemory:
 
     def save(self) -> None:
         """Persist the FAISS index and metadata to disk."""
-        faiss.write_index(self.index, str(self.persist_dir / "index.faiss"))
+        try:
+            cpu_index = faiss.index_gpu_to_cpu(self.index)
+        except AttributeError:
+            cpu_index = self.index
+        except Exception:
+            cpu_index = self.index
+            
+        faiss.write_index(cpu_index, str(self.persist_dir / "index.faiss"))
         meta = [asdict(e) for e in self.entries]
         with open(self.persist_dir / "metadata.json", "w", encoding="utf-8") as fh:
             json.dump(meta, fh, indent=2)
@@ -154,7 +171,13 @@ class VectorMemory:
         if not (index_path.exists() and meta_path.exists()):
             return False
 
-        self.index = faiss.read_index(str(index_path))
+        cpu_index = faiss.read_index(str(index_path))
+        try:
+            res = faiss.StandardGpuResources()
+            self.index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
+        except Exception:
+            self.index = cpu_index
+            
         with open(meta_path, "r", encoding="utf-8") as fh:
             raw = json.load(fh)
         self.entries = [MemoryEntry(**item) for item in raw]

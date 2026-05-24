@@ -231,8 +231,9 @@ class SimulationEngine:
         # Reset per-step message queues
         self.message_bus.step_reset()
 
-        # Each agent acts in sequence
-        for agent in self.agents:
+        import concurrent.futures
+
+        def perceive_and_decide(agent: Agent) -> tuple[Agent, Action]:
             # 1. Perceive
             broadcasts = self.message_bus.get_broadcasts(
                 exclude_sender=agent.agent_id
@@ -255,7 +256,22 @@ class SimulationEngine:
                 agent_list=other_agents,
                 step=self.step,
             )
+            return agent, action
 
+        # Run perceive and decide in parallel
+        agent_actions = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.agents)) as executor:
+            futures = [executor.submit(perceive_and_decide, agent) for agent in self.agents]
+            # Maintain original order of agents for predictable evaluation, or process as completed.
+            # Processing as completed is fine for simultaneous turns.
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    agent_actions.append(future.result())
+                except Exception as exc:
+                    log.exception(f"{SIM} Agent failed to decide: {exc}")
+
+        # Execute actions and learn sequentially to avoid race conditions
+        for agent, action in agent_actions:
             # 3. Execute
             result = self._execute_action(agent, action)
 
