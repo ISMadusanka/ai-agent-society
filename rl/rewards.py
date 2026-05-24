@@ -91,6 +91,20 @@ def consistency_reward(
     return score
 
 
+def profile_development_reward(
+    agent: "Agent",
+    action: "Action",
+) -> float:
+    """Reward for actively defining one's identity.
+    
+    Provides a high reward when agents update their profile, 
+    encouraging blank slate agents to establish themselves.
+    """
+    if action.type.value == "update_profile":
+        return 0.8
+    return 0.0
+
+
 def social_harmony_reward(governance: "SocietyState") -> float:
     """Global reward signal based on society-wide metrics.
 
@@ -115,11 +129,12 @@ def social_harmony_reward(governance: "SocietyState") -> float:
 class RewardWeights:
     """Configurable weights for each reward component."""
 
-    engagement: float = 0.25
+    engagement: float = 0.20
     alliance: float = 0.15
-    influence: float = 0.20
-    consistency: float = 0.20
-    harmony: float = 0.20
+    influence: float = 0.15
+    consistency: float = 0.15
+    harmony: float = 0.15
+    profile_development: float = 0.20
 
 
 class RewardCalculator:
@@ -144,6 +159,7 @@ class RewardCalculator:
         r_influence = influence_reward(agent, governance)
         r_consist = consistency_reward(agent, action)
         r_harmony = social_harmony_reward(governance)
+        r_profile = profile_development_reward(agent, action)
 
         total = (
             w.engagement * r_engage
@@ -151,6 +167,7 @@ class RewardCalculator:
             + w.influence * r_influence
             + w.consistency * r_consist
             + w.harmony * r_harmony
+            + w.profile_development * r_profile
         )
 
         log.debug(
@@ -158,6 +175,7 @@ class RewardCalculator:
             f"total={total:.3f} "
             f"(engage={r_engage:.2f}, alliance={r_alliance:.2f}, "
             f"influence={r_influence:.2f}, consist={r_consist:.2f}, "
-            f"harmony={r_harmony:.2f})"
+            f"harmony={r_harmony:.2f}, profile={r_profile:.2f})"
         )
         return total
+

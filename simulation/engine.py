@@ -110,8 +110,7 @@ class SimulationEngine:
             )
 
     def _create_agents(self) -> None:
-        """Create fresh agents with LLM-generated personalities."""
-        existing_names: list[str] = []
+        """Create fresh agents with blank slate personalities."""
         mem_cfg = {
             "embed_dim": self.config.memory.embed_dim,
             "persist_dir": self.config.memory.persist_dir,
@@ -133,21 +132,17 @@ class SimulationEngine:
                 f"{self.config.simulation.num_agents}…[/cyan]",
                 end=" ",
             )
-            agent.init_personality(existing_names)
-            existing_names.append(agent.personality.name)
+            agent.init_personality()
             self.console.print(
                 f"[green]→ {agent.personality.name}[/green]"
             )
 
-            # Log the generated personality profile
+            # Log the created agent
             from utils.logger import get_agent_logger
             agent_log = get_agent_logger(agent.personality.name)
             agent_log.info("=" * 60)
             agent_log.info(f"AGENT BORN: {agent.personality.name} ({agent.agent_id})")
-            agent_log.info(f"Traits: {agent.personality.traits}")
-            agent_log.info(f"Values: {agent.personality.values}")
-            agent_log.info(f"Background: {agent.personality.background}")
-            agent_log.info(f"Speaking Style: {agent.personality.speaking_style}")
+            agent_log.info(f"Blank slate agent created. Awaiting self-definition.")
             agent_log.info("=" * 60)
 
             self.agents.append(agent)

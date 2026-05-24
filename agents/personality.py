@@ -69,106 +69,28 @@ class PersonalityProfile:
 # Generation
 # ---------------------------------------------------------------------------
 
-_PERSONALITY_SYSTEM = """\
-You are a character designer for a multi-agent society simulation.
-Generate a unique, interesting personality for an autonomous agent.
-Respond with ONLY valid JSON, no other text."""
-
-_PERSONALITY_PROMPT = """\
-Create a personality for Agent #{agent_id} in a society simulation.
-The agent needs:
-- A creative, memorable name (first name only, avoid common names)
-- Big Five personality traits as decimals from 0.0 to 1.0
-- 2-4 core values that guide their decisions
-- A brief background story (2-3 sentences)
-- A distinct speaking style (e.g., "formal and philosophical", "casual and humorous")
-
-Each agent should feel like a distinct individual with clear motivations.
-Previously created agents: {existing_names}
-
-Return JSON in this exact format:
-{{
-  "name": "...",
-  "traits": {{
-    "openness": 0.0-1.0,
-    "conscientiousness": 0.0-1.0,
-    "extraversion": 0.0-1.0,
-    "agreeableness": 0.0-1.0,
-    "neuroticism": 0.0-1.0
-  }},
-  "values": ["value1", "value2"],
-  "background": "...",
-  "speaking_style": "..."
-}}"""
-
-
 def generate_personality(
     llm_client: OllamaClient,
     agent_id: str,
     existing_names: Optional[list[str]] = None,
 ) -> PersonalityProfile:
-    """Use the LLM to generate a unique personality.
-
-    Falls back to a deterministic default if the LLM call fails,
-    ensuring the simulation can always start.
+    """Generate a blank slate personality profile.
+    
+    Agents start with neutral traits and empty backgrounds, allowing them
+    to dynamically construct their identity through interactions.
     """
-    names_str = ", ".join(existing_names) if existing_names else "none yet"
-    prompt = _PERSONALITY_PROMPT.format(
-        agent_id=agent_id, existing_names=names_str
-    )
-
-    try:
-        result = llm_client.call_json(prompt, system=_PERSONALITY_SYSTEM)
-        
-        if not isinstance(result, dict):
-            result = {"raw": str(result)}
-
-        name = result.get("name")
-        if not name or not isinstance(name, str):
-            name = f"Agent-{agent_id}"
-            
-        bg = result.get("background")
-        if not bg or not isinstance(bg, str):
-            bg = "A newcomer to the society."
-            
-        style = result.get("speaking_style")
-        if not style or not isinstance(style, str):
-            style = "neutral"
-
-        profile = PersonalityProfile(
-            name=name,
-            traits=result.get("traits", PersonalityProfile().traits),
-            values=result.get("values", ["fairness"]),
-            background=bg,
-            speaking_style=style,
-        )
-        log.info(f"{AGENT} Generated personality: {profile.name}")
-        return profile
-
-    except Exception as exc:
-        log.exception(
-            f"{AGENT} Personality generation failed for {agent_id}: {exc}. "
-            f"Using fallback."
-        )
-        return _fallback_personality(agent_id)
-
-
-def _fallback_personality(agent_id: str) -> PersonalityProfile:
-    """Deterministic fallback when the LLM is unavailable."""
-    import hashlib
-
-    # Use agent_id hash to produce varied but repeatable traits
-    h = int(hashlib.sha256(agent_id.encode()).hexdigest()[:8], 16)
-    return PersonalityProfile(
+    profile = PersonalityProfile(
         name=f"Agent-{agent_id}",
         traits={
-            "openness": (h % 100) / 100,
-            "conscientiousness": ((h >> 8) % 100) / 100,
-            "extraversion": ((h >> 16) % 100) / 100,
-            "agreeableness": ((h >> 24) % 100) / 100,
-            "neuroticism": ((h >> 32) % 100) / 100,
+            "openness": 0.5,
+            "conscientiousness": 0.5,
+            "extraversion": 0.5,
+            "agreeableness": 0.5,
+            "neuroticism": 0.5,
         },
-        values=["adaptability", "cooperation"],
-        background="A newcomer figuring out their place in society.",
-        speaking_style="straightforward",
+        values=[],
+        background="",
+        speaking_style="neutral",
     )
+    log.info(f"{AGENT} Initialised blank slate personality for: {profile.name}")
+    return profile

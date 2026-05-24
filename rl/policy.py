@@ -28,8 +28,9 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _POLICY_SYSTEM = """\
-You are an autonomous agent in a society simulation.  You must choose
-an action from the available options and provide content for that action.
+You are an autonomous agent in a society simulation. You start as a blank slate. 
+You must choose an action from the available options and provide content for that action.
+Your first priority should be to establish your own identity using the update_profile action.
 
 CRITICAL: Respond with ONLY valid JSON in this exact format:
 {{
@@ -47,7 +48,7 @@ Available action types:
   vote           - Vote on a pending proposal (content: proposal_id, target_agent: null)
   form_alliance  - Propose an alliance with another agent
   reflect        - Spend this turn reflecting on your experiences
-  update_profile - Rewrite your personal free-form profile (likes, enemies, notes, etc.). The content provided will completely replace your current profile.
+  update_profile - Define your identity (name, background, personality, goals). The content provided will completely replace your current profile.
   observe        - Quietly observe without acting
   challenge      - Challenge an existing rule or role"""
 
@@ -68,10 +69,7 @@ def _build_action_prompt(
     ) or "  No relevant memories."
 
     return f"""\
-You are {agent.personality.name} (ID: {agent.agent_id}).
-
-== YOUR PERSONALITY ==
-{agent.personality.summary()}
+You are {agent.agent_id}.
 
 == YOUR CURRENT STATE ==
 Role: {agent.current_role}
@@ -80,7 +78,7 @@ Mood: {agent.mood}
 Goals: {', '.join(agent.goals) if agent.goals else 'None set'}
 
 == YOUR SELF-MAINTAINED PROFILE ==
-{agent.self_profile or 'You have not written a profile yet. Use the update_profile action to write one.'}
+{agent.self_profile or 'You are a blank slate. You have not written a profile yet. Use the update_profile action to define your name, background, personality, and values.'}
 
 == YOUR RELEVANT MEMORIES ==
 {memory_text}
@@ -100,11 +98,11 @@ Goals: {', '.join(agent.goals) if agent.goals else 'None set'}
 == OTHER AGENTS ==
 {', '.join(agent_list)}
 
-Based on your personality, memories, and the current situation,
-choose your next action.  Be true to your character.
+Based on your current state, profile, and memories, choose your next action.
+If you have not yet defined a profile, strongly consider using update_profile to define your identity.
 If there are pending proposals, consider voting.
 If you have ideas for the society, propose rules or roles.
-Interact with other agents — address them by name."""
+Interact with other agents by messaging them."""
 
 
 class LLMPolicy:

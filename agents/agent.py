@@ -113,13 +113,10 @@ class Agent:
     # Initialisation
     # ------------------------------------------------------------------
 
-    def init_personality(
-        self,
-        existing_names: Optional[list[str]] = None,
-    ) -> None:
-        """Generate a unique personality using the LLM."""
+    def init_personality(self) -> None:
+        """Initialise a blank slate personality."""
         self.personality = generate_personality(
-            self.llm, self.agent_id, existing_names
+            self.llm, self.agent_id
         )
 
     def try_load_state(self) -> bool:
